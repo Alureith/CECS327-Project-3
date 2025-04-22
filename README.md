@@ -83,5 +83,21 @@ http://localhost:5001/download/mydoc.txt
 
 ### **Step 6: **
 
+Within the command terminal, enter the following command to send a key-alue dictionary pair to be remembered by the docker containers using windows powershell 
+
+```
+    Invoke-RestMethod -Uri http://localhost:5001/kv -Method POST -Headers @{ "Content-Type" = "application/json" } -Body '{"key":"color","value":"blue"}'
+```
+
+To check to make sure the information was succesfully saved you can get the information using this line
+```
+    Invoke-RestMethod -Uri http://localhost:5001/kv/color -Method GETInvoke-RestMethod -Uri http://localhost:5001/kv/color -Method GET
+
+    # OR use command 
+
+    http://localhost:5001/kv/color
+```
+
+
 
 

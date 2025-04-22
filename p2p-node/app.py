@@ -5,6 +5,9 @@ import os
 # Create the Flask app instance
 app = Flask(__name__)
 
+# Flask key-value pairs
+key_storage = {}
+
 # Make sure the storage folder exists to save uploaded files
 os.makedirs('./storage', exist_ok=True)
 
@@ -31,6 +34,27 @@ def download_file(filename):
     # Send the requested file from the storage folder
     return send_from_directory('./storage', filename)
 
+# Set up flask endpoint to read values
+@app.route('/kv', methods=['POST'])
+def store_key_value():
+    data = request.get_json()
+    key = data.get('key')
+    value = data.get('value')
+
+    if key and value:
+        key_storage[key] = value
+        return jsonify({"status": "success", "key": key, "value": value})
+    else:
+        return jsonify({"status": "error", "message": "Invalid input"}), 400
+
+# Recieve key value being stored 
+@app.route('/kv/<key>', methods=['GET'])
+def get_value(key):
+    value = key_storage.get(key)
+    if value:
+        return jsonify({"key": key, "value": value})
+    else:
+        return jsonify({"error": "Key not found"}), 404
 
 # Run the app on all network interfaces, port 5000
 if __name__ == '__main__':
