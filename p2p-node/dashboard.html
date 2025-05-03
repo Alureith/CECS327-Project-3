@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Peer Network Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial; margin: 40px; }
+        canvas { margin: 30px 0; }
+    </style>
+</head>
+<body>
+    <h1>Peer Network Dashboard</h1>
+    <h3>Active Peers</h3>
+    <div id="peer-count">Loading...</div>
+
+    <h3>Gossip Messages Sent</h3>
+    <canvas id="gossipChart" width="600" height="200"></canvas>
+
+    <h3>Pings Per Interval</h3>
+    <canvas id="pingChart" width="600" height="200"></canvas>
+
+    <script>
+        async function fetchMetrics() {
+            const res = await fetch('/metrics');
+            const data = await res.json();
+            return data;
+        }
+
+        async function drawCharts() {
+            const metrics = await fetchMetrics();
+
+            document.getElementById("peer-count").innerText = metrics.active_peers;
+
+            const timeLabels = metrics.timestamps;
+
+            new Chart(document.getElementById("gossipChart"), {
+                type: 'line',
+                data: {
+                    labels: timeLabels,
+                    datasets: [{
+                        label: 'Gossip Messages Sent',
+                        data: metrics.gossip_sent,
+                        borderColor: 'blue',
+                        fill: false
+                    }]
+                }
+            });
+
+            new Chart(document.getElementById("pingChart"), {
+                type: 'line',
+                data: {
+                    labels: timeLabels,
+                    datasets: [{
+                        label: 'Pings',
+                        data: metrics.ping_counts,
+                        borderColor: 'green',
+                        fill: false
+                    }]
+                }
+            });
+        }
+
+        drawCharts();
+        setInterval(drawCharts, 10000); // refresh every 10 seconds
+    </script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  bootstrap:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bootstrap
+    ports:
+      - "5000:5000"
+    environment:
+      - ROLE=bootstrap
+    networks:
+      p2pnet:
+
+  node1:
+    build: .
+    container_name: node1
+    ports:
+      - "5001:5000"
+    environment:
+      - ROLE=peer
+      - PEER_LIST=http://node2:5000,http://node3:5000
+    networks:
+      p2pnet:
+    depends_on:
+      - bootstrap
+
+  node2:
+    build: .
+    container_name: node2
+    ports:
+      - "5002:5000"
+    environment:
+      - ROLE=peer
+      - PEER_LIST=http://node1:5000,http://node3:5000
+    networks:
+      p2pnet:
+    depends_on:
+      - bootstrap
+
+  node3:
+    build: .
+    container_name: node3
+    ports:
+      - "5003:5000"
+    environment:
+      - ROLE=peer
+      - PEER_LIST=http://node1:5000,http://node2:5000
+    networks:
+      p2pnet:
+    depends_on:
+      - bootstrap
+
+networks:
+  p2pnet:
+    driver: bridge
