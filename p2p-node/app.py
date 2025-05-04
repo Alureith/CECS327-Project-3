@@ -26,15 +26,6 @@ own_url = f"http://{own_ip}:5000"
 # Bootstrap registration (optional role check)
 bootstrap_url = os.getenv("BOOTSTRAP", "http://bootstrap:5000")
 
-metrics = {
-    "ping_count": 0,
-    "kv_get": 0,
-    "kv_post": 0,
-    "gossip_sent": 0,
-    "gossip_received": 0
-}
-
-
 def register_with_bootstrap():
     try:
         res = requests.post(f"{bootstrap_url}/peers", json={"peers": [own_url]})
@@ -74,7 +65,6 @@ def download_file(filename):
 
 @app.route('/kv', methods=['POST'])
 def store_key_value():
-    metrics["kv_post"] += 1
     data = request.get_json()
     key = data.get('key')
     value = data.get('value')
@@ -96,7 +86,6 @@ def store_key_value():
 
 @app.route('/kv/<key>', methods=['GET'])
 def get_value(key):
-    metrics["kv_get"] += 1
     responsible_node = hash_key_to_node(key)
 
     if responsible_node != own_url:
@@ -133,7 +122,6 @@ def update_peers():
 # Health check endpoint
 @app.route('/ping', methods=['GET'])
 def ping():
-    metrics["ping_count"] += 1
     sender = request.args.get("sender")
     if sender and sender != own_url and sender not in peers:
         peers.add(sender)
@@ -189,82 +177,10 @@ def monitor_peers():
                 except Exception as e:
                     print(f"[{own_url}] Failed to notify {peer} about dead peer {dead}: {e}")
 
-@app.route('/gossip', methods=['POST'])
-def receive_gossip():
-    data = request.get_json()
-    received_peers = data.get("peers", [])
-    ttl = data.get("ttl", 0)
-
-    added = []
-    for p in received_peers:
-        if p != own_url and p not in peers:
-            peers.add(p)
-            added.append(p)
-
-    print(f"Received gossip. Peers added: {added}")
-    metrics["gossip_received"] += 1
-    if ttl > 0:
-        import random
-        others = list(peers - {own_url})
-        if others:
-            forward_to = random.choice(others)
-            try:
-                requests.post(f"{forward_to}/gossip", json={"peers": list(peers), "ttl": ttl - 1})
-                print(f"Forwarded gossip to {forward_to}")
-            except Exception as e:
-                print(f"Gossip forward to {forward_to} failed: {e}")
-
-    return jsonify({"status": "gossip received", "added": added, "ttl": ttl})
-
-def gossip_peers():
-    while True:
-        time.sleep(15)
-        metrics["gossip_sent"] += 1
-        if not peers:
-            continue
-        import random
-        target = random.choice(list(peers))
-        try:
-            requests.post(f"{target}/gossip", json={"peers": list(peers), "ttl": 2})
-            print(f"Gossiped peer list to {target}")
-        except Exception as e:
-            print(f"Gossip to {target} failed: {e}")
-from datetime import datetime
-
-metrics_data = {
-    "gossip_sent": [],
-    "ping_counts": [],
-    "timestamps": []
-}
-
-def log_metric(key):
-    now = datetime.now().strftime("%H:%M")
-    if len(metrics_data[key]) >= 10:
-        metrics_data[key].pop(0)
-        metrics_data["timestamps"].pop(0)
-    metrics_data[key].append(metrics_data[key][-1] + 1 if metrics_data[key] else 1)
-    if key == "ping_counts" or key == "gossip_sent":
-        metrics_data["timestamps"].append(now)
-
-@app.route("/metrics")
-def get_metrics():
-    return jsonify({
-        "active_peers": len(peers),
-        "gossip_sent": metrics_data["gossip_sent"],
-        "ping_counts": metrics_data["ping_counts"],
-        "timestamps": metrics_data["timestamps"]
-    })
-
-@app.route('/dashboard')
-def dashboard():
-    return send_file('dashboard.html')
-
-
 # Run the app
 if __name__ == '__main__':
     time.sleep(1)
     register_with_bootstrap()
     notify_peers()
     threading.Thread(target=monitor_peers, daemon=True).start()
-    threading.Thread(target=gossip_peers, daemon=True).start()
     app.run(host='0.0.0.0', port=5000)

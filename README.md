@@ -98,6 +98,58 @@ To check to make sure the information was succesfully saved you can get the info
     http://localhost:5001/kv/color
 ```
 
+## --- Phase 3 ---
 
+### **Step 7: Launch Multi-Node Network with Docker Compose**
 
+Use the provided `docker-compose.yml` to start a bootstrap server and 12 peer nodes:
+
+```powershell
+docker-compose up --build --scale node=12
+```
+
+### **Step 8: Store and Query a Key-Value Pair Across the Network**
+
+#### 🔹 Windows (PowerShell)
+
+Store a key-value pair on Node 1 using `Invoke-RestMethod`:
+
+```powershell
+Invoke-RestMethod -Uri http://localhost:5001/kv -Method POST -Headers @{ "Content-Type" = "application/json" } -Body '{"key":"color","value":"blue"}'
+```
+
+Query all 12 nodes to check which one stores the key:
+
+```powershell
+For ($i = 1; $i -le 12; $i++) {
+    $port = 5000 + $i
+    Write-Host "`n[Node $i - Port $port]"
+    try {
+        Invoke-RestMethod -Uri http://localhost:$port/kv/color -Method GET
+    } catch {
+        Write-Host "No response or key not found."
+    }
+}
+```
+
+---
+
+#### 🔹 Linux/macOS (or WSL)
+
+Store the key-value pair using `curl`:
+
+```bash
+curl -X POST http://localhost:5001/kv -H "Content-Type: application/json" -d '{"key":"color","value":"blue"}'
+```
+
+Query each node with a loop:
+
+```bash
+for i in {1..12}; do
+  port=$((5000 + i))
+  echo -e "\n[Node $i - Port $port]"
+  curl http://localhost:$port/kv/color
+done
+```
+```
 

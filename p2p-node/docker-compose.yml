@@ -20,7 +20,6 @@ services:
       - "5001:5000"
     environment:
       - ROLE=peer
-      - PEER_LIST=http://node2:5000,http://node3:5000
     networks:
       p2pnet:
     depends_on:
@@ -33,7 +32,6 @@ services:
       - "5002:5000"
     environment:
       - ROLE=peer
-      - PEER_LIST=http://node1:5000,http://node3:5000
     networks:
       p2pnet:
     depends_on:
@@ -46,7 +44,114 @@ services:
       - "5003:5000"
     environment:
       - ROLE=peer
-      - PEER_LIST=http://node1:5000,http://node2:5000
+    networks:
+      p2pnet:
+    depends_on:
+      - bootstrap
+
+  node4:
+    build: .
+    container_name: node4
+    ports:
+      - "5004:5000"
+    environment:
+      - ROLE=peer
+    networks:
+      p2pnet:
+    depends_on:
+      - bootstrap
+
+  node5:
+    build: .
+    container_name: node5
+    ports:
+      - "5005:5000"
+    environment:
+      - ROLE=peer
+    networks:
+      p2pnet:
+    depends_on:
+      - bootstrap
+
+  node6:
+    build: .
+    container_name: node6
+    ports:
+      - "5006:5000"
+    environment:
+      - ROLE=peer
+    networks:
+      p2pnet:
+    depends_on:
+      - bootstrap
+
+  node7:
+    build: .
+    container_name: node7
+    ports:
+      - "5007:5000"
+    environment:
+      - ROLE=peer
+    networks:
+      p2pnet:
+    depends_on:
+      - bootstrap
+
+  node8:
+    build: .
+    container_name: node8
+    ports:
+      - "5008:5000"
+    environment:
+      - ROLE=peer
+    networks:
+      p2pnet:
+    depends_on:
+      - bootstrap
+
+  node9:
+    build: .
+    container_name: node9
+    ports:
+      - "5009:5000"
+    environment:
+      - ROLE=peer
+    networks:
+      p2pnet:
+    depends_on:
+      - bootstrap
+
+  node10:
+    build: .
+    container_name: node10
+    ports:
+      - "5010:5000"
+    environment:
+      - ROLE=peer
+    networks:
+      p2pnet:
+    depends_on:
+      - bootstrap
+
+  node11:
+    build: .
+    container_name: node11
+    ports:
+      - "5011:5000"
+    environment:
+      - ROLE=peer
+    networks:
+      p2pnet:
+    depends_on:
+      - bootstrap
+
+  node12:
+    build: .
+    container_name: node12
+    ports:
+      - "5012:5000"
+    environment:
+      - ROLE=peer
     networks:
       p2pnet:
     depends_on:
